@@ -16,8 +16,11 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -29,14 +32,14 @@ public class BetterNav extends JavaPlugin {
 
     private static BetterNav instance;
 
+    private static Map<UUID, UUID> navigationRequests;
     public static BetterNav getInstance()
     {
         return instance;
     }
 
     // BetterLang implementation
-    public Map<String,String> getMessages(YamlConfiguration config)
-    {
+    public Map<String,String> getMessages(YamlConfiguration config){
         // get language out of config file
         String language = config.getString("language");
 
@@ -58,14 +61,39 @@ public class BetterNav extends JavaPlugin {
         return messaging.getMessages();
     }
 
+    public void addRequest(UUID requester, UUID accepter){
+        navigationRequests.put(requester, accepter);
+    }
+    public void removeRequest(UUID requester){
+        navigationRequests.remove(requester);
+    }
+    public void declineAcceptRequest(UUID accepter){
+        //TODO: investigate if memory leak
+        while (navigationRequests.values().remove(accepter));
+    }
+    public UUID getNavigationByRequester(UUID requester){
+        return navigationRequests.get(requester);
+    }
+    public UUID getNavigationByAccepter(UUID accepter){
+        return getKeyByValue(navigationRequests, accepter);
+    }
 
+
+
+    public static <T, E> T getKeyByValue(Map<T, E> map, E value) {
+        for (Map.Entry<T, E> entry : map.entrySet()) {
+            if (Objects.equals(value, entry.getValue())) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
     // run this code when plugin is started
     @Override
-    public void onEnable()
-    {
+    public void onEnable(){
 
         BetterNav.instance = this;
-
+        BetterNav.navigationRequests = new HashMap<>();
         // get BetterYaml config
         OptionalBetterYaml optionalConfig = new OptionalBetterYaml("config.yml", this, true);
         Optional<YamlConfiguration> optionalYaml = optionalConfig.getYamlConfiguration();
@@ -85,7 +113,7 @@ public class BetterNav extends JavaPlugin {
         final HashMap<UUID, NavBossBar> bblist = new HashMap<>();
 
         // start command handler
-        CommandsHandler commands = new CommandsHandler( config, playerGoals, this, actionbarplayers, bblist, messages);
+        CommandsHandler commands = new CommandsHandler( config, playerGoals, instance, actionbarplayers, bblist, messages);
         getServer().getPluginManager().registerEvents(new Event_Handler( config, playerGoals,this ,actionbarplayers,bblist,messages),this);
 
         // set executor for the commands
@@ -98,13 +126,15 @@ public class BetterNav extends JavaPlugin {
         getCommand("del").setExecutor(commands);
         getCommand("navplayer").setExecutor(commands);
         getCommand("stopnav").setExecutor(commands);
+        getCommand("accept").setExecutor(commands);
+        getCommand("deny").setExecutor(commands);
 
         // display a plugin enabled message
         getServer().getConsoleSender().sendMessage( ChatColor.GREEN+"BetterNav plugin enabled" );
 
-        // implement bstats
-        BstatsImplementation bstatsImplementation = new BstatsImplementation(this,config);
-        bstatsImplementation.run();
+//        // implement bstats
+//        BstatsImplementation bstatsImplementation = new BstatsImplementation(this,config);
+//        bstatsImplementation.run();
 
         //Start UpdateChecker in a seperate thread to not completely block the server
         Thread updateChecker = new UpdateChecker(this);
@@ -114,8 +144,7 @@ public class BetterNav extends JavaPlugin {
 
     // run this code when plugin should be disabled
     @Override
-    public void onDisable()
-    {
+    public void onDisable(){
         // display a plugin disabled message
         getServer().getConsoleSender().sendMessage( ChatColor.RED+"BetterNav plugin disabled" );
 

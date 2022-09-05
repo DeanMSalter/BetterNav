@@ -89,6 +89,9 @@ public class NavBossBar
             color = BarColor.BLUE;
         }
         return color;
+    }
 
+    public void setBarColor(BarColor color){
+        bar.setColor(color);
     }
 }

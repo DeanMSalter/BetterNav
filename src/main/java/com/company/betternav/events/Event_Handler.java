@@ -9,13 +9,16 @@ import com.company.betternav.bossbarcalculators.AdvancedBossbarCalculator;
 import com.company.betternav.bossbarcalculators.BasicCalculator;
 import com.company.betternav.bossbarcalculators.IdeaBossBarCalculator;
 import com.company.betternav.util.FileHandler;
+import com.company.betternav.util.animation.LineAnimation;
 import com.company.betternav.util.animation.SpiralAnimation;
 import com.company.betternav.util.animation.location.PlayerLocation;
+import com.company.betternav.util.animation.location.StaticLocation;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.boss.BarColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -24,6 +27,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.Vector;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -89,11 +93,9 @@ public class Event_Handler implements Listener
 
     }
 
-
     // send welcome message when player joined
     @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event)
-    {
+    public void onPlayerJoin(PlayerJoinEvent event){
         // check if welcomeMessage is enabled in config file
         boolean message = config.getBoolean("welcomeMessage");
 
@@ -130,8 +132,7 @@ public class Event_Handler implements Listener
 
     //check if player has moved
     @EventHandler
-    public void onPlayerWalk(PlayerMoveEvent event)
-    {
+    public void onPlayerWalk(PlayerMoveEvent event){
 
         Location loc = event.getTo();
         if(loc == null)
@@ -163,6 +164,7 @@ public class Event_Handler implements Listener
                 navPlayer.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(message));
             }
         }
+
 
         //check for bossbar
         Goal goal = this.playerGoals.getPlayerGoal( uuid );
@@ -227,10 +229,25 @@ public class Event_Handler implements Listener
             NavBossBar navbb = bblist.get(uuid);
 
             // update the distance to the goal
-            navbb.updateDistance(goalName,distance);
+            Location goalLocation = goal.getLocation();
+            String goalLocationStr = Math.round(goalLocation.getX()) + ", " + Math.round(goalLocation.getY()) + ", " + Math.round(goalLocation.getZ());
+            navbb.updateDistance(goalName + " " + goalLocationStr,distance);
 
             // get vector of the player
             double barLevel = this.bossBarCalculator.calculateBarLevel( navPlayer, goal.getLocation());
+
+            Vector direction = navPlayer.getLocation().getDirection();
+            Vector towardsEntity = goalLocation.subtract(navPlayer.getLocation()).toVector().normalize();
+            double facing = direction.distance(towardsEntity);
+            if (facing < 0.2) {
+                navbb.setBarColor(BarColor.GREEN);
+            } else if(facing > 0.2 && facing < 1.5) {
+                navbb.setBarColor(BarColor.YELLOW);
+            } else {
+                navbb.setBarColor(BarColor.RED);
+            }
+            //resets goal location cause dumb
+            goalLocation.add(navPlayer.getLocation()).toVector().normalize();
 
             // update the progress on the bar
             navbb.setProgress(barLevel);
@@ -248,6 +265,7 @@ public class Event_Handler implements Listener
             // add player to the bar
             bb.addPlayer(navPlayer);
         }
+
 
         if(distance < distance_to_goal)
         {
@@ -313,8 +331,7 @@ public class Event_Handler implements Listener
      * Save death locations on death of player
      * **/
     @EventHandler
-    public void onPlayerDeath(PlayerDeathEvent event)
-    {
+    public void onPlayerDeath(PlayerDeathEvent event){
         // if saving deatlocations is true
         if(config.getBoolean("death_location_save"))
         {

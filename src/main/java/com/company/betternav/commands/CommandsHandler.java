@@ -1,5 +1,6 @@
 package com.company.betternav.commands;
 
+import com.company.betternav.BetterNav;
 import com.company.betternav.commands.betternavcommands.*;
 import com.company.betternav.events.NavBossBar;
 import com.company.betternav.navigation.PlayerGoals;
@@ -9,7 +10,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
+
 import java.util.*;
 
 
@@ -26,13 +27,13 @@ public class CommandsHandler implements CommandExecutor
      *  Constructor for command handler
      *
      * @param playerGoals class
-     * @param plugin, to get the path extracted
+     * @param betterNav, to get the path extracted
      *
      */
-    public CommandsHandler(YamlConfiguration config, PlayerGoals playerGoals, JavaPlugin plugin, HashMap<UUID,Boolean> actionbarplayers, HashMap<UUID, NavBossBar> bblist,Map<String,String> messages)
+    public CommandsHandler(YamlConfiguration config, PlayerGoals playerGoals, BetterNav betterNav, HashMap<UUID,Boolean> actionbarplayers, HashMap<UUID, NavBossBar> bblist, Map<String,String> messages)
     {
         this.messages = messages;
-        FileHandler fileHandler = new FileHandler(plugin, config,messages);
+        FileHandler fileHandler = new FileHandler(betterNav, config,messages);
 
         this.commandMap = new HashMap<String, BetterNavCommand>()
         {
@@ -44,8 +45,11 @@ public class CommandsHandler implements CommandExecutor
             put("del",              new DelCommand(fileHandler));
             put("showcoordinates",  new ShowCoordinatesCommand(fileHandler,config));
             put("nav",              new NavCommand(fileHandler, playerGoals, config));
-            put("navplayer",        new NavPlayerCommand(config, playerGoals));
-            put("stopnav",          new StopNavCommand(playerGoals, bblist));
+            put("navplayer",        new NavPlayerCommand(config, playerGoals, betterNav));
+            put("stopnav",          new StopNavCommand(playerGoals, bblist, betterNav));
+            put("accept",           new AcceptCommand(config, playerGoals, betterNav));
+            put("deny",             new DenyCommand(config, playerGoals, betterNav));
+
             }
         };
     }

@@ -243,60 +243,60 @@ public class FileHandler
         // start a new json parser Gson
         Gson gson = new Gson();
 
-        // get the world the player is active on
-        String world = player.getWorld().getName();
 
-        // get the uuid of the player who did the command
-        String uuid = player.getUniqueId().toString();
+        File parentFolder = new File(this.getPath());
 
-        // make up the world path
-        String worldPath = path+File.separator+world+File.separator;
+        for (File worldFile : parentFolder.listFiles()) {
+            // get the uuid of the player who did the command
+            String uuid = player.getUniqueId().toString();
 
-        // get the config of privatewaypoins
-        boolean privateWayPoints = config.getBoolean("privateWayPoints");
+            // make up the world path
+            String worldPath = worldFile.getPath()+File.separator;
 
-        // if it is enabled: PlayerPath will be needed the uuid of the player
-        if(privateWayPoints)
-        {
-            // add the uuid of the player
-            String playerPath = worldPath+uuid;
+            // get the config of privatewaypoins
+            boolean privateWayPoints = config.getBoolean("privateWayPoints");
 
-            // make up the world path out of the player path
-            worldPath = playerPath;
+            // if it is enabled: PlayerPath will be needed the uuid of the player
+            if(privateWayPoints)
+            {
+                // add the uuid of the player
+                String playerPath = worldPath+uuid;
+
+                // make up the world path out of the player path
+                worldPath = playerPath;
+            }
+
+            else
+            {
+                //create shared directory
+                worldPath = worldPath+File.separator+"shared";
+            }
+
+            // make a directory of the world path
+            makeDirectory(worldPath);
+
+            // create a string of the path of the file to be read
+            String readPath = worldPath+File.separator+location+".json";
+
+            // try to read the file (if exists)
+            try (Reader reader = new FileReader(readPath))
+            {
+
+                // Convert JSON File to Java Object
+                // return the class
+                return gson.fromJson(reader, LocationWorld.class);
+
+            }
+            catch (IOException e){
+
+            }
         }
+        String primaryColor = messages.getOrDefault("primary_color", "§d");
 
-        else
-        {
-            //create shared directory
-            worldPath = worldPath+File.separator+"shared";
-        }
-
-        // make a directory of the world path
-        makeDirectory(worldPath);
-
-        // create a string of the path of the file to be read
-        String readPath = worldPath+File.separator+location+".json";
-
-        // try to read the file (if exists)
-        try (Reader reader = new FileReader(readPath))
-        {
-
-            // Convert JSON File to Java Object
-            // return the class
-            return gson.fromJson(reader, LocationWorld.class);
-
-        }
-        catch (IOException e)
-        {
-            String primaryColor = messages.getOrDefault("primary_color", "§d");
-
-            // send player error message if the waypoint couldn't be found
-            String message = primaryColor + messages.getOrDefault("error_navplayer", "Could not find waypoint <location>, maybe you mean navplayer <player>?");
-            message = message.replace("<location>",location);
-            player.sendMessage(message);
-            return null;
-
-        }
-
+        // send player error message if the waypoint couldn't be found
+        String message = primaryColor + messages.getOrDefault("error_navplayer", "Could not find waypoint <location>, maybe you mean navplayer <player>?");
+        message = message.replace("<location>",location);
+        player.sendMessage(message);
+        return null;
     }
 }

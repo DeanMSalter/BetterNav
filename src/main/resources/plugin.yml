@@ -4,6 +4,14 @@ version: ${project.version}
 authors: [Thomas Verschoor, Dieter Nuytemans]
 api-version: 1.16
 commands:
+  deny:
+    description:   deny navigation request
+    usage: /<command>
+    permission: betternav.deny
+  accept:
+    description: accept navigation request
+    usage: /<command>
+    permission: betternav.accept
   bn:
     description: show explanation of commands
     usage: /<command>

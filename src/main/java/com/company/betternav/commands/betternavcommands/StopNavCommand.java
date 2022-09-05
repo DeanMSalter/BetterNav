@@ -1,5 +1,6 @@
 package com.company.betternav.commands.betternavcommands;
 
+import com.company.betternav.BetterNav;
 import com.company.betternav.commands.BetterNavCommand;
 import com.company.betternav.events.NavBossBar;
 import com.company.betternav.navigation.PlayerGoals;
@@ -16,10 +17,12 @@ public class StopNavCommand extends BetterNavCommand
     private final PlayerGoals playerGoals;
     // hashmap to keep track of players with their bossbar
     private final HashMap<UUID, NavBossBar> bblist;
+    private final BetterNav betterNav;
 
-    public StopNavCommand(PlayerGoals playerGoals, HashMap<UUID, NavBossBar> bblist) {
+    public StopNavCommand(PlayerGoals playerGoals, HashMap<UUID, NavBossBar> bblist, BetterNav betterNav) {
         this.playerGoals = playerGoals;
         this.bblist = bblist;
+        this.betterNav = betterNav;
     }
 
     @Override
@@ -36,6 +39,8 @@ public class StopNavCommand extends BetterNavCommand
 
             // remove the bar of the list
             bblist.remove(player.getUniqueId());
+
+            betterNav.removeRequest(player.getUniqueId());
 
             // send ending navigation message
             String primaryColor = messages.getOrDefault("primary_color", "§d");
