@@ -1,5 +1,8 @@
 package com.company.betternav.navigation;
 
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+
 public class LocationWorld
 {
     private String world;
@@ -8,6 +11,9 @@ public class LocationWorld
     private int Y;
     private int Z;
 
+    private int index;
+//    private final Location location;
+
     public LocationWorld(String world, String name, int X, int Y, int Z)
     {
         this.world = world;
@@ -15,6 +21,8 @@ public class LocationWorld
         this.X = X;
         this.Y = Y;
         this.Z = Z;
+//        this.location = new Location(Bukkit.getWorld(world), X, Y, Z);
+
     }
 
     public void setWorld(String world) {
@@ -35,6 +43,9 @@ public class LocationWorld
 
     public void setZ(int z) {
         Z = z;
+    }
+    public void setIndex(int index) {
+        this.index = index;
     }
 
     public String getWorld() {
@@ -57,4 +68,10 @@ public class LocationWorld
         return Z;
     }
 
+    public int getIndex() {
+        return index;
+    }
+//    public Location getLocation() {
+//        return location;
+//    }
 }

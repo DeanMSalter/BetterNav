@@ -12,6 +12,10 @@ commands:
     description: accept navigation request
     usage: /<command>
     permission: betternav.accept
+  board:
+    description: toggle board command
+    usage: /<command>
+    permission: betternav.board
   bn:
     description: show explanation of commands
     usage: /<command>

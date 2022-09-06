@@ -49,6 +49,7 @@ public class CommandsHandler implements CommandExecutor
             put("stopnav",          new StopNavCommand(playerGoals, bblist, betterNav));
             put("accept",           new AcceptCommand(config, playerGoals, betterNav));
             put("deny",             new DenyCommand(config, playerGoals, betterNav));
+            put("board",            new BoardCommand(config, playerGoals, betterNav));
 
             }
         };

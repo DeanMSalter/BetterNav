@@ -1,7 +1,9 @@
 package com.company.betternav.events;
 
+import com.company.betternav.BetterNav;
 import com.company.betternav.navigation.Goal;
 import com.company.betternav.bossbarcalculators.IBossBarCalculator;
+import com.company.betternav.navigation.LocationWorld;
 import com.company.betternav.navigation.Navigation;
 import com.company.betternav.navigation.PlayerGoal;
 import com.company.betternav.navigation.PlayerGoals;
@@ -9,12 +11,11 @@ import com.company.betternav.bossbarcalculators.AdvancedBossbarCalculator;
 import com.company.betternav.bossbarcalculators.BasicCalculator;
 import com.company.betternav.bossbarcalculators.IdeaBossBarCalculator;
 import com.company.betternav.util.FileHandler;
-import com.company.betternav.util.animation.LineAnimation;
 import com.company.betternav.util.animation.SpiralAnimation;
 import com.company.betternav.util.animation.location.PlayerLocation;
-import com.company.betternav.util.animation.location.StaticLocation;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -26,21 +27,32 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Score;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.ScoreboardManager;
 import org.bukkit.util.Vector;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Stream;
+
 import static java.lang.String.valueOf;
 
 
 public class Event_Handler implements Listener
 {
 
-    private final JavaPlugin plugin;
+    private final BetterNav plugin;
     private final PlayerGoals playerGoals;
     private HashMap<UUID, NavBossBar> bblist = new HashMap<>();
     private final IBossBarCalculator bossBarCalculator;
@@ -49,6 +61,10 @@ public class Event_Handler implements Listener
     private final int distance_to_goal;
     private final Map<String,String> messages;
     private final boolean heightCheck;
+    private final FileHandler fileHandler;
+
+    ScoreboardManager manager = Bukkit.getScoreboardManager();
+
 
     // rounding function
     public double round(double value, int places)
@@ -60,7 +76,7 @@ public class Event_Handler implements Listener
         return bd.doubleValue();
     }
 
-    public Event_Handler(YamlConfiguration config, PlayerGoals playerGoals, JavaPlugin plugin, HashMap<UUID, Boolean> actionbarplayers, HashMap<UUID, NavBossBar> bblist, Map<String, String> messages)
+    public Event_Handler(YamlConfiguration config, PlayerGoals playerGoals, BetterNav plugin, HashMap<UUID, Boolean> actionbarplayers, HashMap<UUID, NavBossBar> bblist, Map<String, String> messages, FileHandler fileHandler)
     {
         this.config = config;
         this.playerGoals = playerGoals;
@@ -68,6 +84,7 @@ public class Event_Handler implements Listener
         this.actionbarplayers = actionbarplayers;
         this.bblist = bblist;
         this.messages = messages;
+        this.fileHandler = fileHandler;
 
         // get bb value out of config file
         int bbcalc = config.getInt("BossBar");
@@ -130,22 +147,80 @@ public class Event_Handler implements Listener
         }
     }
 
+
+    private void buildScoreboard(Player player) {
+        Boolean status = plugin.getBoardStatus(player.getUniqueId());
+        Scoreboard board = manager.getMainScoreboard();
+        Objective objective = board.getObjective("locations");
+
+        if (objective != null){
+            objective.unregister();
+        }
+        if (!status) {
+            return;
+        }
+        objective = board.registerNewObjective("locations", "", "Locations");
+
+        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+        objective.setDisplayName("Locations");
+        List<LocationWorld> locations = fileHandler.getLocationsInWorld(player.getWorld(), player);
+
+        Map<String, Double> distances = new HashMap<>();
+        for (LocationWorld location : locations) {
+            Double distance = player.getLocation().distance(new Location(Bukkit.getWorld(location.getWorld()), location.getX(), location.getY(), location.getZ()));
+            distances.put(location.getName(), distance);
+        }
+
+        distances = sortByValue(distances);
+        List<String> indexOrder = new ArrayList<>();
+        for (int i = 0; i < distances.size(); i++) {
+            indexOrder.add(distances.keySet().toArray()[i].toString());
+        };
+
+        for (int i = 0; i < locations.size(); i++) {
+            LocationWorld coordinates = locations.get(i);
+            Location location = new Location(Bukkit.getWorld(coordinates.getWorld()), coordinates.getX(), coordinates.getY(), coordinates.getZ());
+            double neededYaw = getYaw(location, player.getLocation());
+            double degrees = normalAbsoluteAngleDegrees(Math.toDegrees(neededYaw));
+            double playerYaw = player.getLocation().getYaw() + 180;
+
+            Vector direction = player.getLocation().getDirection();
+            Vector towardsEntity = location.subtract(player.getLocation()).toVector().normalize();
+            String arrow = calculateDirection(playerYaw, degrees);
+
+            double facingDifference = direction.distance(towardsEntity);
+            if (facingDifference < 0.2) {
+                arrow = "§2" + arrow;
+            } else if (facingDifference > 0.2 && facingDifference < 1.5) {
+                arrow = "§6" + arrow;
+            } else {
+                arrow = "§4" + arrow;
+            }
+
+            Score score = objective.getScore(arrow + ChatColor.GREEN + coordinates.getName() + ": " + (int) player.getLocation().distance(location));
+            score.setScore(indexOrder.indexOf(coordinates.getName()));
+        }
+
+        player.setScoreboard(board);
+    }
     //check if player has moved
     @EventHandler
     public void onPlayerWalk(PlayerMoveEvent event){
 
         Location loc = event.getTo();
-        if(loc == null)
-        {
+        if(loc == null){
             return;
         }
 
         Player navPlayer = event.getPlayer();
         UUID uuid = navPlayer.getUniqueId();
-
+        Player player = Bukkit.getPlayer(uuid);
+        if (player == null) {
+            return;
+        }
+        buildScoreboard(player);
         // check for action bar
-        if (actionbarplayers.containsKey(uuid))
-        {
+        if (actionbarplayers.containsKey(uuid)){
             // get boolean for player
             boolean actionbar = actionbarplayers.get(uuid);
             if(actionbar)
@@ -179,8 +254,7 @@ public class Event_Handler implements Listener
         String worldGoal = goal.getLocation().getWorld().getName();
 
         // if on different world
-        if(ownWorld!=worldGoal)
-        {
+        if(ownWorld!=worldGoal){
             // send message to navigating person
             String primaryColor = messages.getOrDefault("primary_color", "§d");
             String message = primaryColor + messages.getOrDefault("different_world", "Target on different world");
@@ -223,8 +297,7 @@ public class Event_Handler implements Listener
         NavBossBar bb = new NavBossBar(plugin,config,messages);
 
         //check if player exists
-        if(bblist.containsKey(uuid))
-        {
+        if(bblist.containsKey(uuid)){
             // get bossbar of player
             NavBossBar navbb = bblist.get(uuid);
 
@@ -326,7 +399,17 @@ public class Event_Handler implements Listener
                 ).startAnimation();
         }
     }
+    public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
+        List<Map.Entry<K, V>> list = new ArrayList<>(map.entrySet());
+        list.sort(Map.Entry.comparingByValue());
 
+        Map<K, V> result = new LinkedHashMap<>();
+        for (Map.Entry<K, V> entry : list) {
+            result.put(entry.getKey(), entry.getValue());
+        }
+
+        return result;
+    }
     /**
      * Save death locations on death of player
      * **/
@@ -358,5 +441,64 @@ public class Event_Handler implements Listener
         }
 
 
+    }
+
+
+    private static String calculateDirection(double playersYaw, double locationYaw){
+        int cw = 0;
+        double cwPlayersYaw = playersYaw;
+        while(Math.abs(cwPlayersYaw - locationYaw) > 10){
+            if(cwPlayersYaw >= 360) {
+                cwPlayersYaw = 0;
+            }
+            cwPlayersYaw += 10;
+            cw++;
+            if (cw > 36){
+                break;
+            }
+        }
+        int acw = 0;
+        double acwPlayersYaw = playersYaw;
+        while(Math.abs(acwPlayersYaw - locationYaw) > 10){
+            if(acwPlayersYaw <= 0) {
+                acwPlayersYaw = 360;
+            }
+            acwPlayersYaw -= 10;
+            acw++;
+            if (acw > 36){
+                break;
+            }
+        }
+        if (Math.max(acw, cw) < 3){
+            return "↑";
+        } else if (Math.min(acw, cw) > 15) {
+            return "↓";
+        }else if (acw < cw){
+            if (acw <= 4){
+                return "⬉";
+            }else if (acw <= 12){
+                return "←";
+            }else {
+                return "⬋";
+            }
+        } else {
+            if (cw <= 4) {
+                return "⬈";
+            }else if (cw <= 12){
+                return "→";
+            }else {
+                return "⬊";
+            }
+        }
+    }
+
+    public double getYaw(Location locA, Location locB) {
+        Vector dir  = locB.subtract(locA).toVector();
+        dir.setY(0);
+        dir = dir.normalize();
+        return dir.getX() > 0 ? -Math.acos(dir.getZ()) : Math.acos(dir.getZ());
+    }
+    public static double normalAbsoluteAngleDegrees(double angle) {
+        return (angle %= 360) >= 0 ? angle : (angle + 360);
     }
 }

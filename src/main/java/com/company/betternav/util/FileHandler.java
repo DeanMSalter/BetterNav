@@ -4,11 +4,19 @@ import com.company.betternav.navigation.Goal;
 import com.company.betternav.navigation.LocationWorld;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scoreboard.Score;
+import org.bukkit.util.Vector;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import static java.lang.String.valueOf;
@@ -21,24 +29,21 @@ public class FileHandler
     private final YamlConfiguration config;
     private final Map<String,String> messages;
 
-    public FileHandler(JavaPlugin plugin, YamlConfiguration config, Map<String,String> messages)
-    {
+    public FileHandler(JavaPlugin plugin, YamlConfiguration config, Map<String,String> messages){
         // File.separator to get correct separation, depending on OS
         this.path = plugin.getDataFolder().getAbsolutePath() + File.separator;
         this.config = config;
         this.messages = messages;
     }
 
-    public String getPath()
-    {
+    public String getPath(){
         return this.path;
     }
 
     /**
      * Makes a directory in the certain path if the directory doesn't exist
      */
-    public void makeDirectory(String newPath)
-    {
+    public void makeDirectory(String newPath){
         // Create missing folder at path
         File folder = new File(newPath);
         if (!folder.exists()) folder.mkdir();
@@ -51,8 +56,7 @@ public class FileHandler
      * @param playerGoal the name of the goal and Location location
      */
 
-    public void writeLocationFile(Player player, Goal playerGoal)
-    {
+    public void writeLocationFile(Player player, Goal playerGoal){
         // initiate json parser Gson
         Gson json = new GsonBuilder().setPrettyPrinting().create();
 
@@ -182,8 +186,7 @@ public class FileHandler
      * @param player the player who did execute the deletion
      * @return boolean if the file is gone
      */
-    public boolean deleteFile(String location,Player player)
-    {
+    public boolean deleteFile(String location,Player player){
 
         // get the player id and world
         String id = player.getUniqueId().toString();
@@ -238,8 +241,7 @@ public class FileHandler
      * @return object of class LocationWorld
      */
 
-    public LocationWorld readFile(String location,Player player)
-    {
+    public LocationWorld readFile(String location,Player player){
         // start a new json parser Gson
         Gson gson = new Gson();
 
@@ -298,5 +300,46 @@ public class FileHandler
         message = message.replace("<location>",location);
         player.sendMessage(message);
         return null;
+    }
+
+    public List<LocationWorld> getLocationsInWorld(World world, Player player){
+        List<LocationWorld> locations = new ArrayList<>();
+        File parentFolder = new File(this.getPath());
+        String id = player.getUniqueId().toString();
+
+        for (File worldFile : parentFolder.listFiles()) {
+            if (!worldFile.isDirectory()){
+                continue;
+            }
+            if (!worldFile.getName().equals(world.getName())){
+                continue;
+            }
+            String readPath = worldFile.getPath()+File.separator;
+            boolean privateWayPoints = config.getBoolean("privateWayPoints");
+            if(privateWayPoints){
+                readPath = readPath+id+File.separator;
+            }
+            else{
+                //create shared directory
+                readPath = readPath+File.separator+"shared";
+            }
+
+            File folder = new File(readPath);
+            File[] listOfFiles = folder.listFiles();
+
+            if(listOfFiles==null||listOfFiles.length==0){
+                continue;
+            }
+            for (File file : listOfFiles){
+                if (file.isFile()) {
+                    String[] fileName = file.getName().split(".json");
+                    String locationName = fileName[0];
+                    LocationWorld coordinates = this.readFile(locationName,player);
+                    locations.add(coordinates);
+                }
+            }
+        }
+
+        return locations;
     }
 }
