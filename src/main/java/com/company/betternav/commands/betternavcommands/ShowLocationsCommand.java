@@ -161,19 +161,66 @@ public class ShowLocationsCommand extends BetterNavCommand
 
         return true;
     }
+    //TODO: fix this
     private static String calculateDirection(double playersYaw, double locationYaw){
-        double antiClockwise = Math.abs(locationYaw - playersYaw);
-        double clockwise =  Math.abs(((360 + locationYaw) - playersYaw)) ;
-        double notSure = (playersYaw-locationYaw+360)%360;
-        if (Math.abs(playersYaw - locationYaw) < 30) {
-            return "↑";
-        } else if (Math.abs(180 - notSure) < 30) {
-            return "↓";
-        } else if (notSure>180){
-            return "→";
-        } else {
-            return "←";
+        int cw = 0;
+        double cwPlayersYaw = playersYaw;
+        while(Math.abs(cwPlayersYaw - locationYaw) > 10){
+            if(cwPlayersYaw >= 360) {
+                cwPlayersYaw = 0;
+            }
+            cwPlayersYaw += 10;
+            cw++;
+            if (cw > 36){
+                break;
+            }
         }
+        int acw = 0;
+        double acwPlayersYaw = playersYaw;
+        while(Math.abs(acwPlayersYaw - locationYaw) > 10){
+            if(acwPlayersYaw <= 0) {
+                acwPlayersYaw = 360;
+            }
+            acwPlayersYaw -= 10;
+            acw++;
+            if (acw > 36){
+                break;
+            }
+        }
+        if (Math.max(acw, cw) < 3){
+            return "↑";
+        } else if (Math.min(acw, cw) > 15) {
+            return "↓";
+        }else if (acw < cw){
+           if (acw <= 4){
+               return "⬉";
+           }else if (acw <= 12){
+               return "←";
+           }else {
+               return "⬋";
+           }
+        } else {
+            if (cw <= 4) {
+                return "⬈";
+            }else if (cw <= 12){
+                return "→";
+            }else {
+                return "⬊";
+            }
+        }
+
+        //        double antiClockwise = Math.abs(locationYaw - playersYaw);
+//        double clockwise =  Math.abs(((360 + locationYaw) - playersYaw)) ;
+//        double notSure = (playersYaw-locationYaw+360)%360;
+//        if (Math.abs(playersYaw - locationYaw) < 30) {
+//            return "↑";
+//        } else if (Math.abs(180 - notSure) < 30) {
+//            return "↓";
+//        } else if (notSure>180){
+//            return "→";
+//        } else {
+//            return "←";
+//        }
     }
 
 
