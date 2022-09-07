@@ -11,8 +11,7 @@ public class LocationWorld
     private int Y;
     private int Z;
 
-    private int index;
-//    private final Location location;
+    private double distance;
 
     public LocationWorld(String world, String name, int X, int Y, int Z)
     {
@@ -44,10 +43,9 @@ public class LocationWorld
     public void setZ(int z) {
         Z = z;
     }
-    public void setIndex(int index) {
-        this.index = index;
+    public void setDistance(double distance) {
+        this.distance = distance;
     }
-
     public String getWorld() {
         return world;
     }
@@ -67,10 +65,11 @@ public class LocationWorld
     public int getZ() {
         return Z;
     }
-
-    public int getIndex() {
-        return index;
+    public double getDistance() {
+        return distance;
     }
+
+
 //    public Location getLocation() {
 //        return location;
 //    }

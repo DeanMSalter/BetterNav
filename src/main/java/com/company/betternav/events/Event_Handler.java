@@ -1,6 +1,7 @@
 package com.company.betternav.events;
 
 import com.company.betternav.BetterNav;
+import com.company.betternav.navigation.Board;
 import com.company.betternav.navigation.Goal;
 import com.company.betternav.bossbarcalculators.IBossBarCalculator;
 import com.company.betternav.navigation.LocationWorld;
@@ -32,6 +33,7 @@ import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
+import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Vector;
 
 import java.math.BigDecimal;
@@ -43,6 +45,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -64,7 +67,6 @@ public class Event_Handler implements Listener
     private final FileHandler fileHandler;
 
     ScoreboardManager manager = Bukkit.getScoreboardManager();
-
 
     // rounding function
     public double round(double value, int places)
@@ -118,7 +120,7 @@ public class Event_Handler implements Listener
 
         // get the player that joined
         Player player = event.getPlayer();
-
+        BetterNav.addBoard(fileHandler.readBoardFile(player.getUniqueId()));
         // send him message
         if(message)
         {
@@ -149,56 +151,71 @@ public class Event_Handler implements Listener
 
 
     private void buildScoreboard(Player player) {
-        Boolean status = plugin.getBoardStatus(player.getUniqueId());
-        Scoreboard board = manager.getMainScoreboard();
-        Objective objective = board.getObjective("locations");
+        Scoreboard board = manager.getNewScoreboard();
+        Objective objective = board.getObjective(player.getUniqueId() + "locations");
+        Board playerBoard = BetterNav.getBoards().get(player.getUniqueId());
+        if (playerBoard == null){
+            try{
+                objective.unregister();
+            }catch (NullPointerException e){
 
-        if (objective != null){
-            objective.unregister();
-        }
-        if (!status) {
+            }
             return;
         }
-        objective = board.registerNewObjective("locations", "", "Locations");
 
-        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-        objective.setDisplayName("Locations");
-        List<LocationWorld> locations = fileHandler.getLocationsInWorld(player.getWorld(), player);
+        if (!playerBoard.getStatus()) {
+            try{
+                player.setScoreboard(manager.getNewScoreboard());
+                board.getEntries().forEach(board::resetScores);
+                objective.unregister();
+            }catch (NullPointerException e){
 
-        Map<String, Double> distances = new HashMap<>();
-        for (LocationWorld location : locations) {
-            Double distance = player.getLocation().distance(new Location(Bukkit.getWorld(location.getWorld()), location.getX(), location.getY(), location.getZ()));
-            distances.put(location.getName(), distance);
+            }
+            return;
         }
 
-        distances = sortByValue(distances);
-        List<String> indexOrder = new ArrayList<>();
-        for (int i = 0; i < distances.size(); i++) {
-            indexOrder.add(distances.keySet().toArray()[i].toString());
-        };
+        if (objective == null){
+            objective = board.registerNewObjective(player.getUniqueId() + "locations", "", "§b§lLocations");
+            objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+//            objective.unregister();
+        }
+        //        objective = board.registerNewObjective("locations", "", "§b§lLocations");
+//        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
 
+        List<LocationWorld> locations = fileHandler.getLocationsInWorld(player.getWorld(), player);
+
+        List<Double> distances = new ArrayList<>();
+        for (LocationWorld location : locations) {
+            double distance = player.getLocation().distance(new Location(Bukkit.getWorld(location.getWorld()), location.getX(), location.getY(), location.getZ()));
+            location.setDistance(distance);
+            distances.add(distance);
+        }
+        Collections.sort(distances);
+//        Map<Integer,LocationWorld> locationOrder = new HashMap<>();
+//        for (LocationWorld location : locations) {
+//            locationOrder.put(distances.indexOf(location.getDistance()), location);
+//        }
+//
+        Set<String> entries = board.getEntries();
         for (int i = 0; i < locations.size(); i++) {
             LocationWorld coordinates = locations.get(i);
+            entries.forEach(s -> {
+                if (s.contains(coordinates.getName())){
+                    board.resetScores(s);
+                }
+            });
+            int index = distances.indexOf(coordinates.getDistance());
+            if (index >= playerBoard.getNumToShow()) {
+                continue;
+            }
             Location location = new Location(Bukkit.getWorld(coordinates.getWorld()), coordinates.getX(), coordinates.getY(), coordinates.getZ());
             double neededYaw = getYaw(location, player.getLocation());
             double degrees = normalAbsoluteAngleDegrees(Math.toDegrees(neededYaw));
             double playerYaw = player.getLocation().getYaw() + 180;
-
-            Vector direction = player.getLocation().getDirection();
-            Vector towardsEntity = location.subtract(player.getLocation()).toVector().normalize();
             String arrow = calculateDirection(playerYaw, degrees);
 
-            double facingDifference = direction.distance(towardsEntity);
-            if (facingDifference < 0.2) {
-                arrow = "§2" + arrow;
-            } else if (facingDifference > 0.2 && facingDifference < 1.5) {
-                arrow = "§6" + arrow;
-            } else {
-                arrow = "§4" + arrow;
-            }
-
-            Score score = objective.getScore(arrow + ChatColor.GREEN + coordinates.getName() + ": " + (int) player.getLocation().distance(location));
-            score.setScore(indexOrder.indexOf(coordinates.getName()));
+            Score score = objective.getScore(arrow + ChatColor.WHITE + coordinates.getName() + ": §b" + (int) coordinates.getDistance());
+            score.setScore(index);
         }
 
         player.setScoreboard(board);
@@ -469,25 +486,25 @@ public class Event_Handler implements Listener
                 break;
             }
         }
-        if (Math.max(acw, cw) < 3){
-            return "↑";
+        if (Math.max(acw, cw) < 4){
+            return "§2↑";
         } else if (Math.min(acw, cw) > 15) {
-            return "↓";
+            return "§4↓";
         }else if (acw < cw){
             if (acw <= 4){
-                return "⬉";
+                return "§6⬉";
             }else if (acw <= 12){
-                return "←";
+                return "§4←";
             }else {
-                return "⬋";
+                return "§4⬋";
             }
         } else {
             if (cw <= 4) {
-                return "⬈";
+                return "§6⬈";
             }else if (cw <= 12){
-                return "→";
+                return "§4→";
             }else {
-                return "⬊";
+                return "§4⬊";
             }
         }
     }

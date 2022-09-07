@@ -1,5 +1,6 @@
 package com.company.betternav.util;
 
+import com.company.betternav.navigation.Board;
 import com.company.betternav.navigation.Goal;
 import com.company.betternav.navigation.LocationWorld;
 import com.google.gson.Gson;
@@ -176,6 +177,64 @@ public class FileHandler
             String message = primaryColor + messages.getOrDefault("error_saving", "An error occurred by writing a file for your coordinates");
             player.sendMessage(message);
         }
+    }
+
+
+    public void writeBoardFile(UUID playerUUID, Board board){
+        // initiate json parser Gson
+        Gson json = new GsonBuilder().setPrettyPrinting().create();
+
+        try
+        {
+
+            // if it does not exist: create missing folder Betternav
+            makeDirectory(path);
+
+            // attach the world path to the original path
+            String worldPath = path+File.separator+"boards";
+
+            // create missing folder world
+            makeDirectory(worldPath);
+
+            // create new file string in the directory with filename: name
+            String filename = worldPath+File.separator+playerUUID+".json";
+
+            // create the file
+            File directory = new File(filename);
+            FileWriter myWriter = new FileWriter(filename);
+            json.toJson(board,myWriter);
+            // close writer
+            myWriter.close();
+        }
+        catch (IOException e)
+        {
+            // send player message if error occurred
+            String primaryColor = messages.getOrDefault("primary_color", "§d");
+            String message = primaryColor + messages.getOrDefault("error_saving", "An error occurred by writing a file for your coordinates");
+            Bukkit.getPlayer(playerUUID).sendMessage(message);
+        }
+    }
+
+    public Board readBoardFile(UUID playerUUID){
+        // start a new json parser Gson
+        Gson gson = new Gson();
+        File parentFolder = new File(this.getPath());
+        String filePath = path+File.separator+"boards"+File.separator+playerUUID+".json";
+        // create a string of the path of the file to be read
+
+        // try to read the file (if exists)
+        try (Reader reader = new FileReader(filePath))
+        {
+
+            // Convert JSON File to Java Object
+            // return the class
+            return gson.fromJson(reader, Board.class);
+
+        }
+        catch (IOException e){
+
+        }
+        return null;
     }
 
     /**

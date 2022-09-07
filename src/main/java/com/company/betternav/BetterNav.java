@@ -7,6 +7,7 @@ import be.dezijwegel.betteryaml.validation.validator.Validator;
 import com.company.betternav.commands.CommandsHandler;
 import com.company.betternav.events.Event_Handler;
 import com.company.betternav.events.NavBossBar;
+import com.company.betternav.navigation.Board;
 import com.company.betternav.navigation.PlayerGoals;
 import com.company.betternav.util.FileHandler;
 import com.company.betternav.util.UpdateChecker;
@@ -33,13 +34,22 @@ public class BetterNav extends JavaPlugin {
     private static BetterNav instance;
 
     private static Map<UUID, UUID> navigationRequests;
-    private static Map<UUID, Boolean> boardStatuses;
+    private static Map<UUID, Board> boards;
+    FileHandler fileHandler;
 
     public static BetterNav getInstance()
     {
         return instance;
     }
-
+    public static Map<UUID, Board> getBoards() {
+        return boards;
+    }
+    public static void addBoard(Board board) {
+        if (board == null){
+            return;
+        }
+        boards.put(board.getPlayer(), board);
+    }
     // BetterLang implementation
     public Map<String,String> getMessages(YamlConfiguration config){
         // get language out of config file
@@ -81,14 +91,17 @@ public class BetterNav extends JavaPlugin {
     }
 
     public Boolean getBoardStatus(UUID playersUUID) {
-        Boolean boardStatus = boardStatuses.get(playersUUID);
-        if (boardStatus == null){
-            boardStatus = false;
+        Board board = boards.get(playersUUID);
+        if (board == null){
+            return false;
+        } else {
+            return board.getStatus();
         }
-        return boardStatus;
     }
-    public Boolean setBoardStatus(UUID playersUUID, Boolean boardStatus){
-        boardStatuses.put(playersUUID, boardStatus);
+    public Boolean setBoardStatus(UUID playersUUID, Boolean boardStatus, int numToShow){
+        Board board = new Board(boardStatus, playersUUID, numToShow);
+        boards.put(playersUUID, board);
+        fileHandler.writeBoardFile(playersUUID, board);
         return getBoardStatus(playersUUID);
     }
 
@@ -106,8 +119,7 @@ public class BetterNav extends JavaPlugin {
 
         BetterNav.instance = this;
         BetterNav.navigationRequests = new HashMap<>();
-        BetterNav.boardStatuses = new HashMap<>();
-
+        BetterNav.boards = new HashMap<>();
 
         // get BetterYaml config
         OptionalBetterYaml optionalConfig = new OptionalBetterYaml("config.yml", this, true);
@@ -121,7 +133,7 @@ public class BetterNav extends JavaPlugin {
 
         YamlConfiguration config = optionalYaml.get();
         Map<String, String> messages = getMessages(config);
-        FileHandler fileHandler = new FileHandler(this, config,messages);
+        fileHandler = new FileHandler(this, config,messages);
 
         final PlayerGoals playerGoals = new PlayerGoals();
         final HashMap<UUID, Boolean> actionbarplayers = new HashMap<>();
@@ -156,54 +168,6 @@ public class BetterNav extends JavaPlugin {
         Thread updateChecker = new UpdateChecker(this);
         updateChecker.start();
         ScoreboardManager manager = Bukkit.getScoreboardManager();
-
-//        Bukkit.getScheduler().runTaskTimer(this, () -> {
-//            boardStatuses.forEach((uuid, status) -> {
-//                Player player = Bukkit.getPlayer(uuid);
-//                if (player == null) {
-//                    return;
-//                }
-//                Scoreboard board = manager.getNewScoreboard();
-//                Objective objective = board.getObjective("locations");
-//                if (!status && objective != null){
-//                    objective.unregister();
-//                }
-//                if (!status){
-//                    return;
-//                }
-//                if (objective == null){
-//                    objective = board.registerNewObjective("locations", "", "Locations");
-//                }
-//
-//
-//                objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-//                objective.setDisplayName("Locations");
-//                List<LocationWorld> locations = fileHandler.getLocationsInWorld(player.getWorld(), player);
-//                for (LocationWorld coordinates : locations) {
-//                    Location location = new Location( Bukkit.getWorld(coordinates.getWorld()), coordinates.getX(), coordinates.getY(), coordinates.getZ());
-//                    double neededYaw = getYaw(location, player.getLocation());
-//                    double degrees = normalAbsoluteAngleDegrees(Math.toDegrees(neededYaw));
-//                    double playerYaw = player.getLocation().getYaw() + 180;
-//
-//                    Vector direction = player.getLocation().getDirection();
-//                    Vector towardsEntity = location.subtract(player.getLocation()).toVector().normalize();
-//                    String arrow = calculateDirection(playerYaw, degrees);
-//
-//                    double facingDifference = direction.distance(towardsEntity);
-//                    if (facingDifference < 0.2) {
-//                        arrow = "§2" + arrow;
-//                    } else if(facingDifference > 0.2 && facingDifference < 1.5) {
-//                        arrow = "§6" + arrow;
-//                    } else {
-//                        arrow = "§4" + arrow;
-//                    }
-//
-//                    Score score = objective.getScore(arrow + ChatColor.GREEN + coordinates.getName());
-//                    score.setScore((int) player.getLocation().distance(location));
-//                }
-//                player.setScoreboard(board);
-//            });
-//        }, 10, 40);
     }
 
         // run this code when plugin should be disabled
@@ -213,62 +177,4 @@ public class BetterNav extends JavaPlugin {
         getServer().getConsoleSender().sendMessage( ChatColor.RED+"BetterNav plugin disabled" );
 
     }
-
-//    private static String calculateDirection(double playersYaw, double locationYaw){
-//        int cw = 0;
-//        double cwPlayersYaw = playersYaw;
-//        while(Math.abs(cwPlayersYaw - locationYaw) > 10){
-//            if(cwPlayersYaw >= 360) {
-//                cwPlayersYaw = 0;
-//            }
-//            cwPlayersYaw += 10;
-//            cw++;
-//            if (cw > 36){
-//                break;
-//            }
-//        }
-//        int acw = 0;
-//        double acwPlayersYaw = playersYaw;
-//        while(Math.abs(acwPlayersYaw - locationYaw) > 10){
-//            if(acwPlayersYaw <= 0) {
-//                acwPlayersYaw = 360;
-//            }
-//            acwPlayersYaw -= 10;
-//            acw++;
-//            if (acw > 36){
-//                break;
-//            }
-//        }
-//        if (Math.max(acw, cw) < 3){
-//            return "↑";
-//        } else if (Math.min(acw, cw) > 15) {
-//            return "↓";
-//        }else if (acw < cw){
-//            if (acw <= 4){
-//                return "⬉";
-//            }else if (acw <= 12){
-//                return "←";
-//            }else {
-//                return "⬋";
-//            }
-//        } else {
-//            if (cw <= 4) {
-//                return "⬈";
-//            }else if (cw <= 12){
-//                return "→";
-//            }else {
-//                return "⬊";
-//            }
-//        }
-//    }
-//
-//    public double getYaw(Location locA, Location locB) {
-//        Vector dir  = locB.subtract(locA).toVector();
-//        dir.setY(0);
-//        dir = dir.normalize();
-//        return dir.getX() > 0 ? -Math.acos(dir.getZ()) : Math.acos(dir.getZ());
-//    }
-//    public static double normalAbsoluteAngleDegrees(double angle) {
-//        return (angle %= 360) >= 0 ? angle : (angle + 360);
-//    }
 }

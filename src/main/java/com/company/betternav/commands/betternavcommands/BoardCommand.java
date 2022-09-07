@@ -30,13 +30,24 @@ public class BoardCommand extends BetterNavCommand
     @Override
     public boolean execute(Player player, Command cmd, String s, String[] args, Map<String,String> messages){
         Boolean boardStatus = this.betterNav.getBoardStatus(player.getUniqueId());
-        boolean newBoardStatus = this.betterNav.setBoardStatus(player.getUniqueId(), !boardStatus);
+
+        int numToShow = 10;
+        if (args.length > 0){
+            try{
+                numToShow = Integer.parseInt(args[0]);
+            }catch (Exception e){
+                player.sendMessage("Error getting the board size!");
+            }
+        }
+
+        boolean newBoardStatus = this.betterNav.setBoardStatus(player.getUniqueId(), !boardStatus, numToShow);
 
         if (newBoardStatus){
             player.sendMessage("Location board turned on!");
         } else {
             player.sendMessage("Location board turned off!");
         }
+
 
         return true;
     }
