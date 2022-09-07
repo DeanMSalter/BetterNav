@@ -12,8 +12,10 @@ import com.company.betternav.bossbarcalculators.AdvancedBossbarCalculator;
 import com.company.betternav.bossbarcalculators.BasicCalculator;
 import com.company.betternav.bossbarcalculators.IdeaBossBarCalculator;
 import com.company.betternav.util.FileHandler;
+import com.company.betternav.util.animation.LineAnimation;
 import com.company.betternav.util.animation.SpiralAnimation;
 import com.company.betternav.util.animation.location.PlayerLocation;
+import com.company.betternav.util.animation.location.StaticLocation;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
@@ -191,6 +193,7 @@ public class Event_Handler implements Listener
             distances.add(distance);
         }
         Collections.sort(distances);
+        Collections.reverse(distances);
 //        Map<Integer,LocationWorld> locationOrder = new HashMap<>();
 //        for (LocationWorld location : locations) {
 //            locationOrder.put(distances.indexOf(location.getDistance()), location);
@@ -320,6 +323,11 @@ public class Event_Handler implements Listener
 
             // update the distance to the goal
             Location goalLocation = goal.getLocation();
+            new LineAnimation(
+                    new PlayerLocation(player), new StaticLocation(goalLocation),
+                    Particle.COMPOSTER, 0.1, 0.05, 10, 1, 1
+            ).startAnimation();
+
             double neededYaw = getYaw(goalLocation, player.getLocation());
             double degrees = normalAbsoluteAngleDegrees(Math.toDegrees(neededYaw));
             double playerYaw = player.getLocation().getYaw() + 180;
@@ -410,14 +418,6 @@ public class Event_Handler implements Listener
 
             // remove the bar of the list
             bblist.remove(navPlayer.getUniqueId());
-
-            // Spawn particle effects when enabled
-            if (config.getBoolean("enableAnimations"))
-                new SpiralAnimation(
-                        new PlayerLocation( navPlayer ),
-                        Particle.COMPOSTER,
-                        1.3,1.8,5000, 1000,5
-                ).startAnimation();
         }
     }
     public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
