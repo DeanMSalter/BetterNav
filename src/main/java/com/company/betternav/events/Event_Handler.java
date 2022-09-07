@@ -320,18 +320,22 @@ public class Event_Handler implements Listener
 
             // update the distance to the goal
             Location goalLocation = goal.getLocation();
-            String goalLocationStr = Math.round(goalLocation.getX()) + ", " + Math.round(goalLocation.getY()) + ", " + Math.round(goalLocation.getZ());
+            double neededYaw = getYaw(goalLocation, player.getLocation());
+            double degrees = normalAbsoluteAngleDegrees(Math.toDegrees(neededYaw));
+            double playerYaw = player.getLocation().getYaw() + 180;
+            String arrow = calculateDirection(playerYaw, degrees);
+            String goalLocationStr = arrow + " " + Math.round(goalLocation.getX()) + ", " + Math.round(goalLocation.getY()) + ", " + Math.round(goalLocation.getZ());
             navbb.updateDistance(goalName + " " + goalLocationStr,distance);
 
             // get vector of the player
             double barLevel = this.bossBarCalculator.calculateBarLevel( navPlayer, goal.getLocation());
 
-            Vector direction = navPlayer.getLocation().getDirection();
+            Vector direction = navPlayer.getLocation().getDirection().setY(0);
             Vector towardsEntity = goalLocation.subtract(navPlayer.getLocation()).toVector().normalize();
             double facing = direction.distance(towardsEntity);
-            if (facing < 0.2) {
+            if (facing < 0.4) {
                 navbb.setBarColor(BarColor.GREEN);
-            } else if(facing > 0.2 && facing < 1.5) {
+            } else if(facing > 0.4 && facing < 1.5) {
                 navbb.setBarColor(BarColor.YELLOW);
             } else {
                 navbb.setBarColor(BarColor.RED);

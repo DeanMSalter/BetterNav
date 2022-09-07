@@ -27,11 +27,9 @@ public class NavBossBar
 
         String primaryColor = messages.getOrDefault("primary_color", "§d");
         String secondaryColor = messages.getOrDefault("secondary_color", "§2");
-        String destinationText = messages.getOrDefault("destination_text", ChatColor.BLUE + "Destination :");
-        String distanceText = messages.getOrDefault("distance_text", ChatColor.BLUE + "Distance :");
 
         // Fill in values
-        String message = primaryColor+destinationText + " " + secondaryColor + goal + "      " + primaryColor + distanceText + " " + secondaryColor + Double.toString(distance);
+        String message = "§b" + goal + "  " + "§b" + distance;
 
         return message;
     }
