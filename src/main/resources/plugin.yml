@@ -54,7 +54,15 @@ commands:
     usage: :/<command>
     aliases: [goto]
     permission: betternav.nav
-
+  navlocation:
+    description: navigate to location
+    usage: :/<command>
+    aliases: [ gotolocation ]
+    permission: betternav.navlocation
+  navgeneral:
+    description:   navgeneral
+    usage: :/<command>
+    permission: betternav.navgeneral
   del:
     description: delete
     usage: :/<command>

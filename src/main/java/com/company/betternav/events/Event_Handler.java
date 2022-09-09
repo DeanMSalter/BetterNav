@@ -194,11 +194,7 @@ public class Event_Handler implements Listener
         }
         Collections.sort(distances);
         Collections.reverse(distances);
-//        Map<Integer,LocationWorld> locationOrder = new HashMap<>();
-//        for (LocationWorld location : locations) {
-//            locationOrder.put(distances.indexOf(location.getDistance()), location);
-//        }
-//
+
         Set<String> entries = board.getEntries();
         for (int i = 0; i < locations.size(); i++) {
             LocationWorld coordinates = locations.get(i);

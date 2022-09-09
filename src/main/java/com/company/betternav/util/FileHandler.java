@@ -352,12 +352,7 @@ public class FileHandler
 
             }
         }
-        String primaryColor = messages.getOrDefault("primary_color", "§d");
 
-        // send player error message if the waypoint couldn't be found
-        String message = primaryColor + messages.getOrDefault("error_navplayer", "Could not find waypoint <location>, maybe you mean navplayer <player>?");
-        message = message.replace("<location>",location);
-        player.sendMessage(message);
         return null;
     }
 

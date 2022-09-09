@@ -46,10 +46,12 @@ public class CommandsHandler implements CommandExecutor
             put("showcoordinates",  new ShowCoordinatesCommand(fileHandler,config));
             put("nav",              new NavCommand(fileHandler, playerGoals, config));
             put("navplayer",        new NavPlayerCommand(config, playerGoals, betterNav));
+            put("navlocation",      new LocationNavCommand(config, playerGoals, betterNav));
             put("stopnav",          new StopNavCommand(playerGoals, bblist, betterNav));
             put("accept",           new AcceptCommand(config, playerGoals, betterNav));
             put("deny",             new DenyCommand(config, playerGoals, betterNav));
             put("board",            new BoardCommand(config, playerGoals, betterNav));
+            put("navgeneral",       new GeneralNavCommand(config, playerGoals, fileHandler, betterNav));
 
             }
         };

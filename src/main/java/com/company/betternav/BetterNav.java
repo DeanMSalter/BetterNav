@@ -148,6 +148,7 @@ public class BetterNav extends JavaPlugin {
         getCommand("getlocation").setExecutor(commands);
         getCommand("savelocation").setExecutor(commands);
         getCommand("showlocations").setExecutor(commands);
+        getCommand("navlocation").setExecutor(commands);
         getCommand("showcoordinates").setExecutor(commands);
         getCommand("nav").setExecutor(commands);
         getCommand("del").setExecutor(commands);
@@ -156,6 +157,7 @@ public class BetterNav extends JavaPlugin {
         getCommand("accept").setExecutor(commands);
         getCommand("deny").setExecutor(commands);
         getCommand("board").setExecutor(commands);
+        getCommand("navgeneral").setExecutor(commands);
 
         // display a plugin enabled message
         getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "BetterNav plugin enabled");
