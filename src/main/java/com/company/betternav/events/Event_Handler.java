@@ -12,6 +12,7 @@ import com.company.betternav.bossbarcalculators.AdvancedBossbarCalculator;
 import com.company.betternav.bossbarcalculators.BasicCalculator;
 import com.company.betternav.bossbarcalculators.IdeaBossBarCalculator;
 import com.company.betternav.util.FileHandler;
+import com.company.betternav.util.Friend;
 import com.company.betternav.util.animation.LineAnimation;
 import com.company.betternav.util.animation.SpiralAnimation;
 import com.company.betternav.util.animation.location.PlayerLocation;
@@ -153,6 +154,14 @@ public class Event_Handler implements Listener
 
 
     private void buildScoreboard(Player player) {
+        List<String> playersInPlayerWorld = new ArrayList<>();
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            if (onlinePlayer.getLocation().getWorld().getName().equals(player.getWorld().getName())){
+                playersInPlayerWorld.add(onlinePlayer.getName());
+            }
+        }
+
+
         Scoreboard board = manager.getNewScoreboard();
         Objective objective = board.getObjective(player.getUniqueId() + "locations");
         Board playerBoard = BetterNav.getBoards().get(player.getUniqueId());
@@ -186,6 +195,17 @@ public class Event_Handler implements Listener
 
         List<LocationWorld> locations = fileHandler.getLocationsInWorld(player.getWorld(), player);
 
+        Friend friend = BetterNav.getFriendRecord(player.getUniqueId());
+        friend.getFriends().keySet().forEach(uuid -> {
+            Player potentialFriend = Bukkit.getPlayer(uuid);
+            if (potentialFriend == null){
+                return;
+            }
+            Location locationOfFriend = potentialFriend.getLocation();
+            LocationWorld locationWorld = new LocationWorld(locationOfFriend.getWorld().getName(),  potentialFriend.getName(), (int) locationOfFriend.getX(), (int) locationOfFriend.getY(), (int) locationOfFriend.getZ());
+            locations.add(0, locationWorld);
+        });
+
         List<Double> distances = new ArrayList<>();
         for (LocationWorld location : locations) {
             double distance = player.getLocation().distance(new Location(Bukkit.getWorld(location.getWorld()), location.getX(), location.getY(), location.getZ()));
@@ -213,7 +233,11 @@ public class Event_Handler implements Listener
             double playerYaw = player.getLocation().getYaw() + 180;
             String arrow = calculateDirection(playerYaw, degrees);
 
-            Score score = objective.getScore(arrow + ChatColor.WHITE + coordinates.getName() + ": §b" + (int) coordinates.getDistance());
+            String boardEntryName = arrow + ChatColor.WHITE + coordinates.getName() + ": §b" + (int) coordinates.getDistance();
+            if (playersInPlayerWorld.contains(coordinates.getName())){
+                boardEntryName = arrow + ChatColor.GOLD + coordinates.getName() + ": §b" + (int) coordinates.getDistance();
+            }
+            Score score = objective.getScore(boardEntryName);
             score.setScore(index);
         }
 

@@ -4,6 +4,7 @@ import com.company.betternav.BetterNav;
 import com.company.betternav.commands.BetterNavCommand;
 import com.company.betternav.events.NavBossBar;
 import com.company.betternav.navigation.PlayerGoals;
+import com.company.betternav.util.Friend;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
@@ -28,19 +29,33 @@ public class StopNavCommand extends BetterNavCommand
     @Override
     public boolean execute(Player player, Command cmd, String s, String[] args, Map<String,String> messages)
     {
-        try
-        {
+        try{
+            UUID playerID = player.getUniqueId();
             // delete player at navigating people
-            this.playerGoals.removePlayerGoal(player.getUniqueId());
+            this.playerGoals.removePlayerGoal(playerID);
 
             // delete the bossbar
-            NavBossBar delbb = bblist.remove(player.getUniqueId());
+            NavBossBar delbb = bblist.remove(playerID);
             delbb.delete(player);
 
             // remove the bar of the list
-            bblist.remove(player.getUniqueId());
+            bblist.remove(playerID);
 
-            betterNav.removeRequest(player.getUniqueId());
+            betterNav.removeRequest(playerID);
+
+            Friend friendRecord = BetterNav.getFriendRecord(playerID);
+            friendRecord.removeAllFriendRequests();
+
+            Map<UUID, Friend> friendRecords = BetterNav.getAllFriendRecords();
+            for (UUID uuid :friendRecords.keySet()) {
+                if (uuid == playerID){
+                    continue;
+                }
+                Friend potentialFriendRecord = friendRecords.get(uuid);
+                if (potentialFriendRecord.removeFriendRequest(playerID)){
+                    break;
+                }
+            }
 
             // send ending navigation message
             String primaryColor = messages.getOrDefault("primary_color", "§d");

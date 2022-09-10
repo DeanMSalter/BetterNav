@@ -52,6 +52,9 @@ public class CommandsHandler implements CommandExecutor
             put("deny",             new DenyCommand(config, playerGoals, betterNav));
             put("board",            new BoardCommand(config, playerGoals, betterNav));
             put("navgeneral",       new GeneralNavCommand(config, playerGoals, fileHandler, betterNav));
+            put("friends",          new FriendsCommand(config, playerGoals, betterNav));
+            put("friend",           new FriendCommand(config, playerGoals, betterNav));
+            put("unfriend",         new RemoveFriendCommand(config, playerGoals, betterNav));
 
             }
         };

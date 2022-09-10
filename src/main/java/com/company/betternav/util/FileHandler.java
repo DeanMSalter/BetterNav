@@ -179,6 +179,61 @@ public class FileHandler
         }
     }
 
+    public void writeFriendFile(UUID playerUUID, Friend friend){
+        // initiate json parser Gson
+        Gson json = new GsonBuilder().setPrettyPrinting().create();
+
+        try
+        {
+
+            // if it does not exist: create missing folder Betternav
+            makeDirectory(path);
+
+            // attach the world path to the original path
+            String worldPath = path+File.separator+"friends";
+
+            // create missing folder world
+            makeDirectory(worldPath);
+
+            // create new file string in the directory with filename: name
+            String filename = worldPath+File.separator+playerUUID+".json";
+
+            FileWriter myWriter = new FileWriter(filename);
+            json.toJson(friend,myWriter);
+            // close writer
+            myWriter.close();
+        }
+        catch (IOException e)
+        {
+            // send player message if error occurred
+            String primaryColor = messages.getOrDefault("primary_color", "§d");
+            String message = primaryColor + messages.getOrDefault("error_saving", "An error occurred by writing a file for your coordinates");
+            Bukkit.getPlayer(playerUUID).sendMessage(message);
+        }
+    }
+
+    public Friend readFriendFile(UUID playerUUID){
+        // start a new json parser Gson
+        Gson gson = new Gson();
+        File parentFolder = new File(this.getPath());
+        String filePath = path+File.separator+"friends"+File.separator+playerUUID+".json";
+        // create a string of the path of the file to be read
+
+        // try to read the file (if exists)
+        try (Reader reader = new FileReader(filePath))
+        {
+
+            // Convert JSON File to Java Object
+            // return the class
+            return gson.fromJson(reader, Friend.class);
+
+        }
+        catch (IOException e){
+
+        }
+        return null;
+    }
+
 
     public void writeBoardFile(UUID playerUUID, Board board){
         // initiate json parser Gson
@@ -199,8 +254,6 @@ public class FileHandler
             // create new file string in the directory with filename: name
             String filename = worldPath+File.separator+playerUUID+".json";
 
-            // create the file
-            File directory = new File(filename);
             FileWriter myWriter = new FileWriter(filename);
             json.toJson(board,myWriter);
             // close writer

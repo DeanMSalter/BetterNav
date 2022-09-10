@@ -74,101 +74,17 @@ public class ShowLocationsCommand extends BetterNavCommand
             player.sendMessage(worldFile.getName() + ":");
 
             for (File file : listOfFiles){
-                    if (file.isFile()) {
-                        String[] fileName = file.getName().split(".json");
-                        String locationName = fileName[0];
-                        LocationWorld coordinates = fileHandler.readFile(locationName,player);
-                        String locationInList = secondaryColor + messages.getOrDefault("locationindex", " - ")+ locationName;
-
-                        if (player.getWorld().getName().equals(coordinates.getWorld())){
-                            locationInList = primaryColor + messages.getOrDefault("locationindex", " - ")+ locationName + " - " + "(" + Math.round(coordinates.getX()) + ", " + Math.round(coordinates.getY()) + ", " + Math.round(coordinates.getZ());
-                            Location location = new Location( Bukkit.getWorld(coordinates.getWorld()), coordinates.getX(), coordinates.getY(), coordinates.getZ());
-
-                            double neededYaw = getYaw(location, player.getLocation());
-                            double degrees = normalAbsoluteAngleDegrees(Math.toDegrees(neededYaw));
-                            double playerYaw = player.getLocation().getYaw() + 180;
-
-                            Vector direction = player.getLocation().getDirection();
-                            Vector towardsEntity = location.subtract(player.getLocation()).toVector().normalize();
-                            String arrow = calculateDirection(playerYaw, degrees);
-
-                            double facingDifference = direction.distance(towardsEntity);
-                            if (facingDifference < 0.2) {
-                                arrow = "§2" + arrow;
-                            } else if(facingDifference > 0.2 && facingDifference < 1.5) {
-                                arrow = "§6" + arrow;
-                            } else {
-                                arrow = "§4" + arrow;
-                            }
-
-                            Score score = objective.getScore(arrow + ChatColor.GREEN + locationName);
-                            score.setScore((int) player.getLocation().distance(location));
-                        }
-                        player.sendMessage(locationInList);
-                    }
+                if (file.isFile()) {
+                    String[] fileName = file.getName().split(".json");
+                    String locationName = fileName[0];
+                    LocationWorld coordinates = fileHandler.readFile(locationName,player);
+                    String locationInList = secondaryColor + messages.getOrDefault("locationindex", " - ") + locationName + " - " + ChatColor.WHITE + "(" + coordinates.getX() + ", " + coordinates.getY() + ", " + coordinates.getZ() + ")";
+                    player.sendMessage(locationInList);
                 }
+            }
         }
         player.setScoreboard(board);
 
         return true;
     }
-
-    private static String calculateDirection(double playersYaw, double locationYaw){
-        int cw = 0;
-        double cwPlayersYaw = playersYaw;
-        while(Math.abs(cwPlayersYaw - locationYaw) > 10){
-            if(cwPlayersYaw >= 360) {
-                cwPlayersYaw = 0;
-            }
-            cwPlayersYaw += 10;
-            cw++;
-            if (cw > 36){
-                break;
-            }
-        }
-        int acw = 0;
-        double acwPlayersYaw = playersYaw;
-        while(Math.abs(acwPlayersYaw - locationYaw) > 10){
-            if(acwPlayersYaw <= 0) {
-                acwPlayersYaw = 360;
-            }
-            acwPlayersYaw -= 10;
-            acw++;
-            if (acw > 36){
-                break;
-            }
-        }
-        if (Math.max(acw, cw) < 3){
-            return "↑";
-        } else if (Math.min(acw, cw) > 15) {
-            return "↓";
-        }else if (acw < cw){
-           if (acw <= 4){
-               return "⬉";
-           }else if (acw <= 12){
-               return "←";
-           }else {
-               return "⬋";
-           }
-        } else {
-            if (cw <= 4) {
-                return "⬈";
-            }else if (cw <= 12){
-                return "→";
-            }else {
-                return "⬊";
-            }
-        }
-    }
-
-    public double getYaw(Location locA, Location locB) {
-        Vector dir  = locB.subtract(locA).toVector();
-        dir.setY(0);
-        dir = dir.normalize();
-        return dir.getX() > 0 ? -Math.acos(dir.getZ()) : Math.acos(dir.getZ());
-    }
-    public static double normalAbsoluteAngleDegrees(double angle) {
-        return (angle %= 360) >= 0 ? angle : (angle + 360);
-    }
-
 }

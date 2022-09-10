@@ -5,6 +5,7 @@ import com.company.betternav.commands.BetterNavCommand;
 import com.company.betternav.navigation.Navigation;
 import com.company.betternav.navigation.PlayerGoal;
 import com.company.betternav.navigation.PlayerGoals;
+import com.company.betternav.util.Friend;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.configuration.file.YamlConfiguration;

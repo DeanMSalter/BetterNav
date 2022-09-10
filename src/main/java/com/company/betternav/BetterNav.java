@@ -10,6 +10,7 @@ import com.company.betternav.events.NavBossBar;
 import com.company.betternav.navigation.Board;
 import com.company.betternav.navigation.PlayerGoals;
 import com.company.betternav.util.FileHandler;
+import com.company.betternav.util.Friend;
 import com.company.betternav.util.UpdateChecker;
 import com.company.betternav.util.validators.ColorCharValidator;
 import org.bukkit.Bukkit;
@@ -19,6 +20,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.ScoreboardManager;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -35,7 +37,15 @@ public class BetterNav extends JavaPlugin {
 
     private static Map<UUID, UUID> navigationRequests;
     private static Map<UUID, Board> boards;
-    FileHandler fileHandler;
+    private static Map<UUID, Friend> friendRecords;
+
+    static FileHandler fileHandler;
+
+    static Map<String, String> messages;
+
+    public static FileHandler getFileHandler(){
+        return fileHandler;
+    }
 
     public static BetterNav getInstance()
     {
@@ -49,6 +59,10 @@ public class BetterNav extends JavaPlugin {
             return;
         }
         boards.put(board.getPlayer(), board);
+    }
+
+    public static Map<String, String> getMessages(){
+        return messages;
     }
     // BetterLang implementation
     public Map<String,String> getMessages(YamlConfiguration config){
@@ -73,6 +87,21 @@ public class BetterNav extends JavaPlugin {
         return messaging.getMessages();
     }
 
+    public static Friend getFriendRecord(UUID owner){
+        Friend friend = friendRecords.get(owner);
+        if (friend == null){
+            Friend newFriendRecord = fileHandler.readFriendFile(owner);
+            if (newFriendRecord == null){
+                newFriendRecord = new Friend(owner, new HashMap<>());
+                fileHandler.writeFriendFile(owner, newFriendRecord);
+            }
+            friendRecords.put(owner, newFriendRecord);
+        }
+        return friendRecords.get(owner);
+    }
+    public static Map<UUID, Friend> getAllFriendRecords(){
+        return friendRecords;
+    }
     public void addRequest(UUID requester, UUID accepter){
         navigationRequests.put(requester, accepter);
     }
@@ -120,6 +149,7 @@ public class BetterNav extends JavaPlugin {
         BetterNav.instance = this;
         BetterNav.navigationRequests = new HashMap<>();
         BetterNav.boards = new HashMap<>();
+        BetterNav.friendRecords = new HashMap<>();
 
         // get BetterYaml config
         OptionalBetterYaml optionalConfig = new OptionalBetterYaml("config.yml", this, true);
@@ -132,7 +162,7 @@ public class BetterNav extends JavaPlugin {
         }
 
         YamlConfiguration config = optionalYaml.get();
-        Map<String, String> messages = getMessages(config);
+        messages = getMessages(config);
         fileHandler = new FileHandler(this, config,messages);
 
         final PlayerGoals playerGoals = new PlayerGoals();
@@ -158,6 +188,9 @@ public class BetterNav extends JavaPlugin {
         getCommand("deny").setExecutor(commands);
         getCommand("board").setExecutor(commands);
         getCommand("navgeneral").setExecutor(commands);
+        getCommand("friends").setExecutor(commands);
+        getCommand("friend").setExecutor(commands);
+        getCommand("unfriend").setExecutor(commands);
 
         // display a plugin enabled message
         getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "BetterNav plugin enabled");

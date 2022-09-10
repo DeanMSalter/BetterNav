@@ -5,6 +5,7 @@ import com.company.betternav.commands.BetterNavCommand;
 import com.company.betternav.navigation.Navigation;
 import com.company.betternav.navigation.PlayerGoal;
 import com.company.betternav.navigation.PlayerGoals;
+import com.company.betternav.util.Friend;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -30,8 +31,7 @@ public class NavPlayerCommand extends BetterNavCommand
     @Override
     public boolean execute(Player player, Command cmd, String s, String[] args, Map<String,String> messages) {
         // if location provided
-        if (args.length == 1)
-        {
+        if (args.length == 1){
             try
             {
                 // get the location needed

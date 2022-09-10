@@ -4,6 +4,18 @@ version: ${project.version}
 authors: [Thomas Verschoor, Dieter Nuytemans]
 api-version: 1.16
 commands:
+  friend:
+    description: send friend request
+    usage: /<command>
+    permission: betternav.friend
+  friends:
+    description: show friends
+    usage: /<command>
+    permission: betternav.friends
+  unfriend:
+    description: remove a friend
+    usage: /<command>
+    permission: betternav.unfriend
   deny:
     description:   deny navigation request
     usage: /<command>
