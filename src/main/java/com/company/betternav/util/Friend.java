@@ -54,6 +54,12 @@ public class Friend {
         BetterNav.getFileHandler().writeFriendFile(owner, this);
 
     }
+    public void addFriend(UUID accepter, String accepterName){
+        friends.put(accepter, accepterName);
+        outgoingFriendRequests.remove(accepter);
+        BetterNav.getFileHandler().writeFriendFile(owner, this);
+
+    }
     public void removeFriend(UUID friend){
         friends.remove(friend);
         BetterNav.getFileHandler().writeFriendFile(owner, this);

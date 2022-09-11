@@ -6,6 +6,7 @@ import com.company.betternav.navigation.Navigation;
 import com.company.betternav.navigation.PlayerGoal;
 import com.company.betternav.navigation.PlayerGoals;
 import com.company.betternav.util.Friend;
+import com.company.betternav.util.Messaging;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -72,9 +73,8 @@ public class NavPlayerCommand extends BetterNavCommand
 
                 this.betterNav.addRequest(player.getUniqueId(), navto.getUniqueId());
 
-                navto.sendMessage(player.getName() + " has requested to navigate to you /accept to accept");
-
-                player.sendMessage("waiting for " + navto.getName() + " to accept your navigation request.");
+                Messaging.sendPrimaryColourMessage(navto, player.getName() + " has requested to navigate to you /accept to accept");
+                Messaging.sendPrimaryColourMessage(player,  "waiting for " + navto.getName() + " to accept your navigation request.");
             }
             catch (IllegalArgumentException e){
                 String primaryColor = messages.getOrDefault("primary_color", "§d");

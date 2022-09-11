@@ -4,6 +4,10 @@ version: ${project.version}
 authors: [Thomas Verschoor, Dieter Nuytemans]
 api-version: 1.16
 commands:
+  convert:
+    description: convert old coords data to new
+    usage: /<command>
+    permission: betternav.convert
   friend:
     description: send friend request
     usage: /<command>

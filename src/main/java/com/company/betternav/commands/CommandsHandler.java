@@ -55,6 +55,7 @@ public class CommandsHandler implements CommandExecutor
             put("friends",          new FriendsCommand(config, playerGoals, betterNav));
             put("friend",           new FriendCommand(config, playerGoals, betterNav));
             put("unfriend",         new RemoveFriendCommand(config, playerGoals, betterNav));
+            put("convert",          new ConvertCommand(config, playerGoals, betterNav));
 
             }
         };

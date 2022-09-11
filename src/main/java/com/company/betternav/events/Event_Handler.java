@@ -1,6 +1,7 @@
 package com.company.betternav.events;
 
 import com.company.betternav.BetterNav;
+import com.company.betternav.commands.betternavcommands.ConvertCommand;
 import com.company.betternav.navigation.Board;
 import com.company.betternav.navigation.Goal;
 import com.company.betternav.bossbarcalculators.IBossBarCalculator;
@@ -118,24 +119,15 @@ public class Event_Handler implements Listener
     // send welcome message when player joined
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event){
-        // check if welcomeMessage is enabled in config file
-        boolean message = config.getBoolean("welcomeMessage");
+        new ConvertCommand(config, playerGoals, plugin).execute(event.getPlayer(), null, null, null, null);
 
         // get the player that joined
         Player player = event.getPlayer();
         BetterNav.addBoard(fileHandler.readBoardFile(player.getUniqueId()));
-        // send him message
-        if(message)
-        {
-            String primaryColor = messages.getOrDefault("primary_color", "§d");
-            String welcomeMessage = primaryColor + messages.getOrDefault("welcome_message", ChatColor.LIGHT_PURPLE + "Betternav plugin enabled: /bn to get help");
-            player.sendMessage(welcomeMessage);
-        }
 
         // check if player had a navigation set
         Goal hadNav = playerGoals.getPlayerGoal(player.getUniqueId());
-        if(hadNav!=null)
-        {
+        if(hadNav!=null){
             NavBossBar bb = new NavBossBar(plugin,config,messages);
 
             // put the bar on the list
@@ -150,6 +142,7 @@ public class Event_Handler implements Listener
             // add player to the bar
             bb.addPlayer(player);
         }
+
     }
 
 
@@ -188,17 +181,14 @@ public class Event_Handler implements Listener
         if (objective == null){
             objective = board.registerNewObjective(player.getUniqueId() + "locations", "", "§b§lLocations");
             objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-//            objective.unregister();
         }
-        //        objective = board.registerNewObjective("locations", "", "§b§lLocations");
-//        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
 
         List<LocationWorld> locations = fileHandler.getLocationsInWorld(player.getWorld(), player);
 
         Friend friend = BetterNav.getFriendRecord(player.getUniqueId());
         friend.getFriends().keySet().forEach(uuid -> {
             Player potentialFriend = Bukkit.getPlayer(uuid);
-            if (potentialFriend == null){
+            if (potentialFriend == null || !potentialFriend.getWorld().getName().equals(player.getWorld().getName())){
                 return;
             }
             Location locationOfFriend = potentialFriend.getLocation();
@@ -345,7 +335,7 @@ public class Event_Handler implements Listener
             Location goalLocation = goal.getLocation();
             new LineAnimation(
                     new PlayerLocation(player), new StaticLocation(goalLocation),
-                    Particle.COMPOSTER, 0.1, 0.05, 10, 1, 1
+                    Particle.COMPOSTER, 0.1, 0.05, 6, 3, 1
             ).startAnimation();
 
             double neededYaw = getYaw(goalLocation, player.getLocation());

@@ -191,6 +191,7 @@ public class BetterNav extends JavaPlugin {
         getCommand("friends").setExecutor(commands);
         getCommand("friend").setExecutor(commands);
         getCommand("unfriend").setExecutor(commands);
+        getCommand("convert").setExecutor(commands);
 
         // display a plugin enabled message
         getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "BetterNav plugin enabled");

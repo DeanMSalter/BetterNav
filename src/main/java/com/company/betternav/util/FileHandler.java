@@ -71,7 +71,7 @@ public class FileHandler
             boolean privateWayPoints = config.getBoolean("privateWayPoints");
 
             // get the worldname where the player is active
-            String world = player.getWorld().getName();
+            String world = playerGoal.getLocation().getWorld().getName();
 
             // attach the world path to the original path
             String worldPath = path+File.separator+world;
