@@ -1,6 +1,7 @@
 package com.company.betternav.commands.betternavcommands;
 
 import com.company.betternav.commands.BetterNavCommand;
+import com.company.betternav.util.Messaging;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
@@ -47,8 +48,6 @@ public class BnCommand extends BetterNavCommand
         String command7 = messages.getOrDefault("navplayer_command", ChatColor.RED+"/navplayer <player>");
         String explanation7 = messages.getOrDefault("navplayerExplanation", ChatColor.GREEN+"start navigating to player");
 
-        String command8 = messages.getOrDefault("stopnav_command", ChatColor.RED+"/stopnav");
-        String explanation8 = messages.getOrDefault("stopnavExplanation", ChatColor.GREEN+"stop navigation");
 
         player.sendMessage(primaryColor + command  +" "+ command_1 +" "+ primaryColor + command_11 + secondaryColor +" "+ explanation);
         player.sendMessage(primaryColor + command2 +" "+ command_2 +" "+ primaryColor + command_21 + secondaryColor +" "+ explanation2);
@@ -57,8 +56,14 @@ public class BnCommand extends BetterNavCommand
         player.sendMessage(primaryColor + command5 + secondaryColor +" "+ explanation5);
         player.sendMessage(primaryColor + command6 +" "+ command_6 +" "+ primaryColor + command_61 + secondaryColor +" "+ explanation6);
         player.sendMessage(primaryColor + command7 + secondaryColor +" "+ explanation7);
-        player.sendMessage(primaryColor + command8 + secondaryColor +" "+ explanation8);
-
+        Messaging.sendHelpMenuMessage(player, "/board (numberToShow) ", "toggles showing your locations/friends in a board on the side of your screen");
+        Messaging.sendHelpMenuMessage(player, "/deny ", "declines all pending navigation requests sent to you");
+        Messaging.sendHelpMenuMessage(player, "/accept ", "accepts the last pending navigation requests sent to you");
+        Messaging.sendHelpMenuMessage(player, "/stopnav ", "stops all navigtations and denies/cancels all navigation requests and friend requests");
+        Messaging.sendHelpMenuMessage(player, "/navgeneral (location, coords, player) ", "will start navigation to either a location , coordiantes or player , depending on what was supplied");
+        Messaging.sendHelpMenuMessage(player, "/navplayer (player) ", "will send a request to navigate to the player");
+        Messaging.sendHelpMenuMessage(player, "/friend (player) ", "will send a friend request to the player");
+        Messaging.sendHelpMenuMessage(player, "/unfriend (player) ", "will unfriend a player");
         return true;
     }
 }

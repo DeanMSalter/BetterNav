@@ -14,4 +14,8 @@ public class Messaging {
         String primaryColor = BetterNav.getMessages().getOrDefault("primary_color", "§d");
         player.sendMessage(primaryColor + message);
     }
+    public static void sendHelpMenuMessage(Player player, String command, String message){
+        String primaryColor = BetterNav.getMessages().getOrDefault("primary_color", "§d");
+        player.sendMessage(primaryColor + command + "§b" + message);
+    }
 }
