@@ -35,12 +35,6 @@ public class ShowLocationsCommand extends BetterNavCommand
 
     @Override
     public boolean execute(Player player, Command cmd, String s, String[] args, Map<String,String> messages){
-        ScoreboardManager manager = Bukkit.getScoreboardManager();
-        Scoreboard board = manager.getNewScoreboard();
-        Objective objective = board.registerNewObjective("test", "dummy", "");
-        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-        objective.setDisplayName("Locations");
-
         String primaryColor = messages.getOrDefault("primary_color", "§d");
         String secondaryColor = messages.getOrDefault("secondary_color", "§2");
 
@@ -83,7 +77,6 @@ public class ShowLocationsCommand extends BetterNavCommand
                 }
             }
         }
-        player.setScoreboard(board);
 
         return true;
     }
