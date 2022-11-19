@@ -198,6 +198,9 @@ public class Event_Handler implements Listener
 
         List<Double> distances = new ArrayList<>();
         for (LocationWorld location : locations) {
+            if (!location.getWorld().equals(player.getWorld().getName())){
+                continue;
+            }
             double distance = player.getLocation().distance(new Location(Bukkit.getWorld(location.getWorld()), location.getX(), location.getY(), location.getZ()));
             location.setDistance(distance);
             distances.add(distance);
@@ -208,6 +211,9 @@ public class Event_Handler implements Listener
         Set<String> entries = board.getEntries();
         for (int i = 0; i < locations.size(); i++) {
             LocationWorld coordinates = locations.get(i);
+            if (!coordinates.getWorld().equals(player.getWorld().getName())){
+                continue;
+            }
             entries.forEach(s -> {
                 if (s.contains(coordinates.getName())){
                     board.resetScores(s);
